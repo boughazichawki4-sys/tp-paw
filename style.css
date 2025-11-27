@@ -1,0 +1,180 @@
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #e9f0fa;
+  margin: 0;
+  padding: 30px;
+  text-align: center;
+}
+
+h1, h2 {
+  color: #333;
+}
+
+/* ===== Formulaire ===== */
+.container {
+  background-color: #fff;
+  padding: 20px 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 350px;
+  margin: 0 auto 40px auto;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.error {
+  color: red;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+button {
+  width: 100%;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #218838;
+}
+
+/* ===== Tableau ===== */
+table {
+  border-collapse: collapse;
+  width: 90%;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+th, td {
+  border: 1px solid #ccc;
+  text-align: center;
+  padding: 8px;
+}
+
+th {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.green { background-color: #d1fae5; }
+.yellow { background-color: #fef9c3; }
+.red { background-color: #fecaca; }
+
+/* ===== Informations étudiant ===== */
+.info-box {
+  margin-top: 30px;
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  width: 350px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: left;
+}
+
+.info-box h3 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+/* ===== Action buttons (placed above the table) ===== */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+.action-buttons button {
+  width: auto;
+  padding: 8px 12px;
+  background-color: #2563eb;
+  border-radius: 6px;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+.action-buttons button#resetBtn { background-color: #6b7280; }
+.action-buttons button:hover { opacity: 0.9; }
+
+/* temporary highlight class applied by jQuery */
+.excellent-temp {
+  background-color: #c8f7d4 !important;
+  transition: background-color 0.6s ease;
+}
+
+/* Row hover / clickable */
+.highlight {
+  background-color: #f0f9ff !important;
+}
+table tbody tr { cursor: pointer; }
+
+/* Report panel styles */
+.report-panel {
+  width: 90%;
+  margin: 20px auto;
+  text-align: center;
+}
+.report-panel #generateReport {
+  background-color: #10b981;
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.report-output {
+  margin: 8px 0 12px 0;
+  font-size: 14px;
+  color: #111827;
+}
+.report-panel canvas { max-width: 480px; display: block; margin: 0 auto; }
+
+/* Search controls */
+.search-controls {
+  width: 90%;
+  margin: 10px auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+.search-controls label { font-weight: bold; margin-right: 6px; }
+.search-controls input {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  width: 260px;
+}
+.search-controls button { padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; }
+
+.sort-status {
+  text-align: center;
+  margin-top: 8px;
+  color: #374151;
+  font-style: italic;
+}
