@@ -3,18 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tutorial 2 — Add & Manage Students</title>
+  <title>Gestion des Présences - Attendance Management</title>
   <link rel="stylesheet" href="style.css"> <!-- Fichier CSS externe -->
 </head>
 <body>
 
-  <h1>Attendance Management — Tutorial 2</h1>
+  <h1>📊 Gestion des Présences - Attendance Management</h1>
   <!-- Search + controls above the table -->
   <div class="search-controls">
     <label for="searchName">Search by Name:</label>
     <input id="searchName" type="text" placeholder="Type first or last name...">
     <button id="sortAbsBtn" type="button">Sort by Absences (Ascending)</button>
     <button id="sortParBtn" type="button">Sort by Participation (Descending)</button>
+    <a href="manage_students.php" style="padding:8px 12px;background-color:#28a745;color:white;text-decoration:none;border-radius:5px;font-weight:600;display:inline-block;">📋 Gérer les étudiants</a>
   </div>
 
   <!-- Tableau placé en haut -->
@@ -70,27 +71,66 @@
 
   <!-- ===== Formulaire d'ajout d'étudiant ===== -->
   <div class="container">
-    <h2>Add Student</h2>
-    <p><a href="add_student.php">Ouvrir le formulaire PHP pour ajouter un étudiant</a></p>
-    <form id="studentForm">
-      <label for="studentId">Student ID:</label>
-      <input type="text" id="studentId">
-      <div class="error" id="idError"></div>
+    <h2>➕ Add Student</h2>
+    <p><a href="manage_students.php" class="link-manage-students">🌟 Utiliser l'interface unifiée (meilleure expérience)</a></p>
+    
+    <div id="formAlert" class="form-alert"></div>
 
-      <label for="lastName">Last Name:</label>
-      <input type="text" id="lastName">
-      <div class="error" id="lastNameError"></div>
+    <form id="studentForm" class="form-improved">
+      <div class="form-group">
+        <label for="studentId">
+          <span class="label-icon">🆔</span>
+          <span class="label-text">Student ID</span>
+          <span class="required">*</span>
+        </label>
+        <input type="text" id="studentId" placeholder="Ex: 20233163" maxlength="20" required>
+        <div class="error-message" id="idError"></div>
+        <div class="field-hint">Minimum 8 chiffres</div>
+      </div>
 
-      <label for="firstName">First Name:</label>
-      <input type="text" id="firstName">
-      <div class="error" id="firstNameError"></div>
+      <div class="form-group">
+        <label for="lastName">
+          <span class="label-icon">👤</span>
+          <span class="label-text">Last Name</span>
+          <span class="required">*</span>
+        </label>
+        <input type="text" id="lastName" placeholder="Ex: Boughazi" maxlength="100" required>
+        <div class="error-message" id="lastNameError"></div>
+        <div class="field-hint">Minimum 2 caractères</div>
+      </div>
 
-      <label for="email">Email:</label>
-      <input type="text" id="email">
-      <div class="error" id="emailError"></div>
+      <div class="form-group">
+        <label for="firstName">
+          <span class="label-icon">👤</span>
+          <span class="label-text">First Name</span>
+          <span class="required">*</span>
+        </label>
+        <input type="text" id="firstName" placeholder="Ex: Chawki" maxlength="100" required>
+        <div class="error-message" id="firstNameError"></div>
+        <div class="field-hint">Minimum 2 caractères</div>
+      </div>
 
-      <button type="submit">Add Student</button>
+      <div class="form-group">
+        <label for="email">
+          <span class="label-icon">✉️</span>
+          <span class="label-text">Email</span>
+          <span class="required">*</span>
+        </label>
+        <input type="email" id="email" placeholder="Ex: student@example.com" maxlength="100" required>
+        <div class="error-message" id="emailError"></div>
+        <div class="field-hint">Format valide requis</div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-submit">💾 Add Student</button>
+        <button type="reset" class="btn-reset">🔄 Clear</button>
+      </div>
     </form>
+
+    <div class="form-info">
+      <strong>ℹ️ Note:</strong> Ce formulaire ajoute les données au tableau sur cette page. 
+      Pour une expérience complète avec base de données, utilisez <a href="manage_students.php">l'interface unifiée</a>.
+    </div>
   </div>
 
   

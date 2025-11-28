@@ -80,8 +80,8 @@ function validateField(field) {
   // Check for empty value
   if (value === '') {
     if (errorElement) {
-      errorElement.textContent = 'This field is required';
-      errorElement.style.display = 'block';
+      errorElement.textContent = '❌ ' + errorMessages[field.id] || 'This field is required';
+      errorElement.classList.add('show');
     }
     field.classList.add('invalid');
     return false;
@@ -91,12 +91,15 @@ function validateField(field) {
   if (!pattern || !pattern.test(value)) {
     isValid = false;
     if (errorElement) {
-      errorElement.textContent = errorMessages[field.id] || 'Invalid value';
-      errorElement.style.display = 'block';
+      errorElement.textContent = '❌ ' + (errorMessages[field.id] || 'Invalid value');
+      errorElement.classList.add('show');
     }
     field.classList.add('invalid');
   } else {
-    if (errorElement) { errorElement.textContent = ''; errorElement.style.display = 'none'; }
+    if (errorElement) { 
+      errorElement.textContent = ''; 
+      errorElement.classList.remove('show'); 
+    }
     field.classList.remove('invalid');
   }
   return isValid;
@@ -111,10 +114,19 @@ function validateField(field) {
   }
 });
 
-document.getElementById('studentForm').addEventListener('submit', function(event) {
+document.getElementById('studentForm').addEventListener('submit', async function(event) {
   event.preventDefault();
-  // hide previous errors
-  document.querySelectorAll('.error').forEach(e => { e.textContent = ''; e.style.display = 'none'; });
+  
+  // Clear previous alerts and errors
+  const formAlert = document.getElementById('formAlert');
+  if (formAlert) {
+    formAlert.classList.remove('show', 'alert-error', 'alert-success');
+    formAlert.textContent = '';
+  }
+  document.querySelectorAll('.error-message').forEach(e => { 
+    e.textContent = ''; 
+    e.classList.remove('show'); 
+  });
 
   const fields = ['studentId','lastName','firstName','email'];
   let allValid = true;
@@ -129,6 +141,11 @@ document.getElementById('studentForm').addEventListener('submit', function(event
   });
   
   if (!allValid) {
+    // Show error alert
+    if (formAlert) {
+      formAlert.textContent = '⚠️ Veuillez corriger les erreurs ci-dessous';
+      formAlert.classList.add('show', 'alert-error');
+    }
     if (firstInvalidField) firstInvalidField.focus();
     return;
   }
@@ -138,52 +155,104 @@ document.getElementById('studentForm').addEventListener('submit', function(event
   const firstName = document.getElementById('firstName').value.trim();
   const email = document.getElementById('email').value.trim();
 
-  const tbody = document.querySelector('#attendanceTable tbody');
-  if (!tbody) {
-    alert('❌ Error: Attendance table not found!');
-    return;
+  // Disable submit button during processing
+  const submitBtn = this.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = '⏳ Enregistrement...';
+
+  try {
+    // Save to MySQL via API using studentId as matricule
+    const formData = new FormData();
+    formData.append('fullname', `${lastName} ${firstName}`);
+    formData.append('matricule', studentId);
+    formData.append('group_id', email); // Using email as group_id for now
+
+    const response = await fetch('api_add_student.php', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      if (formAlert) {
+        formAlert.textContent = `❌ ${data.message || 'Erreur lors de l\'enregistrement'}`;
+        formAlert.classList.add('show', 'alert-error');
+      }
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+      return;
+    }
+
+    // Add to attendance table
+    const tbody = document.querySelector('#attendanceTable tbody');
+    if (tbody) {
+      const row = document.createElement('tr');
+      row.style.animation = 'slideIn 0.4s ease-out';
+
+      // Build row: id, last, first, then 6 pairs of checkboxes, then abs/par/msg with classes
+      let inner = `
+        <td>${escapeHtml(studentId)}</td>
+        <td>${escapeHtml(lastName)}</td>
+        <td>${escapeHtml(firstName)}</td>`;
+      for (let i = 0; i < 6; i++) {
+        inner += `<td><input type="checkbox" aria-label="Session ${i + 1} Present"></td><td><input type="checkbox" aria-label="Session ${i + 1} Participated"></td>`;
+      }
+      inner += `<td class="abs" aria-label="Total Absences"></td><td class="par" aria-label="Total Participations"></td><td class="msg"></td>`;
+      row.innerHTML = inner;
+
+      tbody.insertBefore(row, tbody.firstChild); // Add at top
+
+      // Add change listeners to the new checkboxes
+      row.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', updateAttendance));
+
+      updateAttendance();
+    }
+
+    // Show success message in form alert
+    if (formAlert) {
+      formAlert.textContent = `✅ ${firstName} ${lastName} ajouté avec succès! (Sauvegardé en BD MySQL)`;
+      formAlert.classList.add('show', 'alert-success');
+      
+      // Notifier les autres pages (manage_students.php) via localStorage
+      try {
+        localStorage.setItem('newStudentAdded', JSON.stringify({
+          fullname: `${lastName} ${firstName}`,
+          matricule: studentId,
+          group_id: email,
+          timestamp: new Date().toISOString()
+        }));
+        localStorage.setItem('syncTrigger', Date.now().toString());
+      } catch (e) {
+        console.warn('localStorage non disponible:', e);
+      }
+      
+      // Auto-hide after 4 seconds
+      setTimeout(() => {
+        formAlert.classList.remove('show');
+      }, 4000);
+    }
+    
+    // Reset form
+    this.reset();
+    
+    // Clear error messages
+    document.querySelectorAll('.error-message').forEach(e => e.classList.remove('show'));
+    
+    // Focus back on first field
+    document.getElementById('studentId').focus();
+
+  } catch (error) {
+    if (formAlert) {
+      formAlert.textContent = `❌ Erreur réseau: ${error.message}`;
+      formAlert.classList.add('show', 'alert-error');
+    }
+    console.error('Error:', error);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
   }
-  
-  const row = document.createElement('tr');
-
-  // Build row: id, last, first, then 6 pairs of checkboxes, then abs/par/msg with classes
-  let inner = `
-    <td>${escapeHtml(studentId)}</td>
-    <td>${escapeHtml(lastName)}</td>
-    <td>${escapeHtml(firstName)}</td>`;
-  for (let i = 0; i < 6; i++) {
-    inner += `<td><input type="checkbox" aria-label="Session ${i + 1} Present"></td><td><input type="checkbox" aria-label="Session ${i + 1} Participated"></td>`;
-  }
-  inner += `<td class="abs" aria-label="Total Absences"></td><td class="par" aria-label="Total Participations"></td><td class="msg"></td>`;
-  row.innerHTML = inner;
-
-  tbody.appendChild(row);
-
-  // Add change listeners to the new checkboxes
-  row.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', updateAttendance));
-
-  // jQuery handlers are delegated globally (see bottom) so no per-row binding here.
-
-  updateAttendance();
-
-  // Update last-added info
-  const infoId = document.getElementById('infoId');
-  const infoName = document.getElementById('infoName');
-  const infoEmail = document.getElementById('infoEmail');
-  if (infoId) infoId.textContent = studentId;
-  if (infoName) infoName.textContent = `${lastName} ${firstName}`;
-  if (infoEmail) infoEmail.textContent = email;
-
-  // Show success message
-  const successMsg = document.createElement('div');
-  successMsg.className = 'success-message';
-  successMsg.textContent = '✅ Student added successfully!';
-  successMsg.style.animation = 'fadeOut 3s ease-in-out forwards';
-  document.body.insertBefore(successMsg, document.body.firstChild);
-  setTimeout(() => successMsg.remove(), 3000);
-  
-  this.reset();
-  document.getElementById('studentId').focus();
 });
 
 // === Helper function to escape HTML ===
@@ -208,15 +277,24 @@ document.querySelectorAll("input[type='checkbox']").forEach(chk => {
 window.onload = updateAttendance;
 
 // === jQuery: Highlight & Reset buttons ===
-// Uses jQuery to find students with fewer than 3 absences and animate their rows.
+// Uses jQuery to find EXCELLENT students: many participations AND few/no absences
 if (typeof $ !== 'undefined') {
   $(function() {
     $('#highlightBtn').on('click', function() {
       const rows = $('#attendanceTable tbody tr').filter(function() {
         const absText = $(this).find('.abs').text().trim();
+        const parText = $(this).find('.par').text().trim();
         const abs = parseInt(absText, 10);
-        return !isNaN(abs) && abs < 3;
+        const par = parseInt(parText, 10);
+        
+        // Excellent student: >= 4 participations AND <= 1 absence
+        return !isNaN(abs) && !isNaN(par) && par >= 4 && abs <= 1;
       });
+
+      if (rows.length === 0) {
+        alert('⭐ No excellent students found! (Excellent = 4+ participations AND 0-1 absences)');
+        return;
+      }
 
       rows.each(function() {
         // simple fade animation (fade out / in / out / in)
@@ -230,6 +308,14 @@ if (typeof $ !== 'undefined') {
         $(this).addClass('excellent-temp');
         setTimeout(() => $(this).removeClass('excellent-temp'), 1400);
       });
+
+      // Show success message
+      const successMsg = document.createElement('div');
+      successMsg.className = 'success-message';
+      successMsg.textContent = `⭐ ${rows.length} excellent student(s) highlighted!`;
+      successMsg.style.animation = 'fadeOut 3s ease-in-out forwards';
+      document.body.insertBefore(successMsg, document.body.firstChild);
+      setTimeout(() => successMsg.remove(), 3000);
     });
 
     $('#resetBtn').on('click', function() {
