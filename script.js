@@ -58,17 +58,17 @@ function updateAttendance() {
 // === Validation + ajout automatique d'un étudiant ===
 // Validation patterns and helper
 const patterns = {
-  studentId: /^\d+$/,
-  lastName: /^[A-Za-z\s-]+$/,
-  firstName: /^[A-Za-z\s-]+$/,
+  studentId: /^\d{8,}$/,
+  lastName: /^[A-Za-zÀ-ÿ\s-]{2,}$/,
+  firstName: /^[A-Za-zÀ-ÿ\s-]{2,}$/,
   email: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 };
 
 const errorMessages = {
-  studentId: 'Student ID must contain only numbers',
-  lastName: 'Last name must contain only letters, spaces, or hyphens',
-  firstName: 'First name must contain only letters, spaces, or hyphens',
-  email: 'Please enter a valid email address'
+  studentId: 'Student ID must contain at least 8 numbers',
+  lastName: 'Last name must be 2+ characters (letters, spaces, or hyphens)',
+  firstName: 'First name must be 2+ characters (letters, spaces, or hyphens)',
+  email: 'Please enter a valid email address (ex: user@domain.com)'
 };
 
 function validateField(field) {
@@ -76,9 +76,19 @@ function validateField(field) {
   const value = field.value.trim();
   const pattern = patterns[field.id];
   const errorElement = document.getElementById(field.id + 'Error');
+  
+  // Check for empty value
+  if (value === '') {
+    if (errorElement) {
+      errorElement.textContent = 'This field is required';
+      errorElement.style.display = 'block';
+    }
+    field.classList.add('invalid');
+    return false;
+  }
 
   let isValid = true;
-  if (!pattern.test(value)) {
+  if (!pattern || !pattern.test(value)) {
     isValid = false;
     if (errorElement) {
       errorElement.textContent = errorMessages[field.id] || 'Invalid value';
@@ -108,11 +118,20 @@ document.getElementById('studentForm').addEventListener('submit', function(event
 
   const fields = ['studentId','lastName','firstName','email'];
   let allValid = true;
+  let firstInvalidField = null;
+  
   fields.forEach(id => {
     const input = document.getElementById(id);
-    if (!validateField(input)) allValid = false;
+    if (!validateField(input)) {
+      allValid = false;
+      if (!firstInvalidField) firstInvalidField = input;
+    }
   });
-  if (!allValid) return;
+  
+  if (!allValid) {
+    if (firstInvalidField) firstInvalidField.focus();
+    return;
+  }
 
   const studentId = document.getElementById('studentId').value.trim();
   const lastName = document.getElementById('lastName').value.trim();
@@ -120,17 +139,22 @@ document.getElementById('studentForm').addEventListener('submit', function(event
   const email = document.getElementById('email').value.trim();
 
   const tbody = document.querySelector('#attendanceTable tbody');
+  if (!tbody) {
+    alert('❌ Error: Attendance table not found!');
+    return;
+  }
+  
   const row = document.createElement('tr');
 
   // Build row: id, last, first, then 6 pairs of checkboxes, then abs/par/msg with classes
   let inner = `
-    <td>${studentId}</td>
-    <td>${lastName}</td>
-    <td>${firstName}</td>`;
+    <td>${escapeHtml(studentId)}</td>
+    <td>${escapeHtml(lastName)}</td>
+    <td>${escapeHtml(firstName)}</td>`;
   for (let i = 0; i < 6; i++) {
-    inner += `<td><input type="checkbox"></td><td><input type="checkbox"></td>`;
+    inner += `<td><input type="checkbox" aria-label="Session ${i + 1} Present"></td><td><input type="checkbox" aria-label="Session ${i + 1} Participated"></td>`;
   }
-  inner += `<td class="abs"></td><td class="par"></td><td class="msg"></td>`;
+  inner += `<td class="abs" aria-label="Total Absences"></td><td class="par" aria-label="Total Participations"></td><td class="msg"></td>`;
   row.innerHTML = inner;
 
   tbody.appendChild(row);
@@ -150,9 +174,29 @@ document.getElementById('studentForm').addEventListener('submit', function(event
   if (infoName) infoName.textContent = `${lastName} ${firstName}`;
   if (infoEmail) infoEmail.textContent = email;
 
-  alert('✅ Student added successfully!');
+  // Show success message
+  const successMsg = document.createElement('div');
+  successMsg.className = 'success-message';
+  successMsg.textContent = '✅ Student added successfully!';
+  successMsg.style.animation = 'fadeOut 3s ease-in-out forwards';
+  document.body.insertBefore(successMsg, document.body.firstChild);
+  setTimeout(() => successMsg.remove(), 3000);
+  
   this.reset();
+  document.getElementById('studentId').focus();
 });
+
+// === Helper function to escape HTML ===
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
 
 // === Réagir à chaque modification ===
 document.querySelectorAll("input[type='checkbox']").forEach(chk => {
